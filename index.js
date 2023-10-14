@@ -6,7 +6,7 @@ let movies = JSON.parse(fs.readFileSync(__dirname + '/dev-data/movies.json'))
 const app = express()
 app.use(express.json())
 
-app.get('/api/v1/movies/:slug', (req, res) => {
+const getMovie = (req, res) => {
   const movie = movies.find(m => m.href == req.params.slug)
   if (movie) {
     res.status(200).json({
@@ -19,17 +19,17 @@ app.get('/api/v1/movies/:slug', (req, res) => {
       message: 'Movie not found!'
     })
   }
-})
+}
 
-app.get('/api/v1/movies', (req, res) => {
+const getMovies = (req, res) => {
   return res.status(200).json({
     status: 'success',
     count: movies.length,
     data: movies
   })
-})
+}
 
-app.post('/api/v1/movies', (req, res) => {
+const addMovie = (req, res) => {
   const movie = req.body
 
   movie.href = movie.title?.replace(/ /g, '')
@@ -51,7 +51,29 @@ app.post('/api/v1/movies', (req, res) => {
       })
     }
   )
-})
+}
+
+const updateMovie = (req, res) => {
+  // return res.status(200).json({
+  //   status: 'success'
+  // })
+}
+
+const deleteMovie = (req, res) => {
+  // return res.status(200).json({
+  //   status: 'success',
+  // })
+}
+// app.get('/api/v1/movies/:slug', getMovie)
+// app.get('/api/v1/movies', getMovies)
+// app.post('/api/v1/movies', addMovie)
+
+app.route('/api/v1/movies').post(addMovie).get(getMovies)
+app
+  .route('/api/v1/movies/:slug')
+  .get(getMovie)
+  .patch(updateMovie)
+  .delete(deleteMovie)
 
 app.listen(3000, () => {
   console.log('Server ready..')
