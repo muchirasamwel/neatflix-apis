@@ -54,16 +54,54 @@ const addMovie = (req, res) => {
 }
 
 const updateMovie = (req, res) => {
-  // return res.status(200).json({
-  //   status: 'success'
-  // })
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
 }
 
 const deleteMovie = (req, res) => {
-  // return res.status(200).json({
-  //   status: 'success',
-  // })
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
 }
+
+const updateUser = (req, res) => {
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
+}
+
+const deleteUser = (req, res) => {
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
+}
+
+const addUser = (req, res) => {
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
+}
+
+const getUser = (req, res) => {
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
+}
+
+const getUsers = (req, res) => {
+  return res.status(500).json({
+    status: 'fail',
+    message: 'Not implemented'
+  })
+}
+
 // app.get('/api/v1/movies/:slug', getMovie)
 // app.get('/api/v1/movies', getMovies)
 // app.post('/api/v1/movies', addMovie)
@@ -74,6 +112,13 @@ app
   .get(getMovie)
   .patch(updateMovie)
   .delete(deleteMovie)
+
+app.route('/api/v1/users').post(addUser).get(getUsers)
+app
+  .route('/api/v1/movies/:id')
+  .get(getUser)
+  .patch(updateUser)
+  .delete(deleteUser)
 
 app.listen(3000, () => {
   console.log('Server ready..')
