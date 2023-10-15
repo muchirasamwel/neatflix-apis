@@ -5,11 +5,13 @@ const {
   getMovies,
   getMovie,
   updateMovie,
-  deleteMovie
+  deleteMovie,
+  getMovieBySlug
 } = require('../controllers/moviesController')
 
 const moviesRouter = express.Router()
 
+moviesRouter.param('slug', getMovieBySlug)
 moviesRouter.route('/').post(addMovie).get(getMovies)
 moviesRouter
   .route('/:slug')

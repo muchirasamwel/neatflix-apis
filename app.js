@@ -2,7 +2,6 @@ const express = require('express')
 const moviesRouter = require('./routes/moviesRouter')
 const usersRouter = require('./routes/usersRouter')
 
-
 const app = express()
 app.use(express.json())
 
@@ -13,6 +12,4 @@ app.use(express.json())
 app.use('/api/v1/movies', moviesRouter)
 app.use('/api/v1/users', usersRouter)
 
-app.listen(3000, () => {
-  console.log('Server ready..')
-})
+module.exports = app
