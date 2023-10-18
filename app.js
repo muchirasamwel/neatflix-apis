@@ -1,6 +1,9 @@
 const express = require('express')
+const dotenv = require('dotenv')
 const moviesRouter = require('./routes/moviesRouter')
 const usersRouter = require('./routes/usersRouter')
+
+dotenv.config({ path: '.env' })
 
 const app = express()
 app.use(express.json())
