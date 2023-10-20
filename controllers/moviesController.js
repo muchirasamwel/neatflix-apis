@@ -3,8 +3,9 @@ const {
   addMovieSchema,
   updateMovieSchema
 } = require('../validation_schemas/moviesSchemas')
+const Movie = require('../models/movieModel')
 
-let movies = JSON.parse(fs.readFileSync(__dirname + '/../dev-data/movies.json'))
+// let movies = JSON.parse(fs.readFileSync(__dirname + '/../dev-data/movies.json'))
 
 const validateAddMovie = async (req, res, next) => {
   const payload = req.body
@@ -36,70 +37,93 @@ const validateUpdateMovie = async (req, res, next) => {
   }
 }
 
-const getMovieBySlug = (req, res, next, val) => {
-  const movie = movies.find(m => m.href == req.params.slug)
-  if (movie) {
-    req.movie = movie
-    next()
-  } else {
-    res.status(404).json({
+const getMovie = async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id)
+    if (movie) {
+      res.status(200).json({
+        status: 'success',
+        data: movie
+      })
+    } else {
+      res.status(404).json({
+        status: 'fail',
+        message: 'Movie not found!'
+      })
+    }
+  } catch (err) {
+    return res.status(500).json({
       status: 'fail',
-      message: 'Movie not found!'
+      message: err.message
     })
   }
 }
 
-const getMovie = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: req.movie
-  })
+const getMovies = async (req, res) => {
+  try {
+    const movies = await Movie.find({})
+    return res.status(200).json({
+      status: 'success',
+      count: movies.length,
+      data: movies
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
 }
 
-const getMovies = (req, res) => {
-  return res.status(200).json({
-    status: 'success',
-    count: movies.length,
-    data: movies
-  })
+const addMovie = async (req, res) => {
+  try {
+    const movie = await Movie.create(req.body)
+
+    return res.status(201).json({
+      status: 'success',
+      data: movie
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
 }
 
-const addMovie = (req, res) => {
-  const movie = req.body
+const updateMovie = async (req, res) => {
+  try {
+    const result = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    })
 
-  movie.href = movie.title?.replace(/ /g, '')
-  movies = [...movies, movie]
-
-  fs.writeFile(
-    __dirname + './../dev-data/movies.json',
-    JSON.stringify(movies),
-    err => {
-      if (err) {
-        return res.status(500).json({
-          status: 'fail',
-          message: err.message
-        })
-      }
-      return res.status(200).json({
-        status: 'success',
-        data: movie
-      })
-    }
-  )
+    return res.status(202).json({
+      status: 'success',
+      data: result
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
 }
 
-const updateMovie = (req, res) => {
-  return res.status(500).json({
-    status: 'fail',
-    message: 'Not implemented'
-  })
-}
+const deleteMovie = async (req, res) => {
+  try {
+    await Movie.deleteOne({ _id: req.params.id })
 
-const deleteMovie = (req, res) => {
-  return res.status(500).json({
-    status: 'fail',
-    message: 'Not implemented'
-  })
+    return res.status(200).json({
+      status: 'success',
+      data: null
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
 }
 
 module.exports = {
@@ -108,7 +132,6 @@ module.exports = {
   updateMovie,
   getMovies,
   deleteMovie,
-  getMovieBySlug,
   validateAddMovie,
   validateUpdateMovie
 }
