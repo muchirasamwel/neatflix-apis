@@ -93,7 +93,10 @@ const addMovie = async (req, res) => {
 
 const updateMovie = async (req, res) => {
   try {
-    const result = await Movie.updateOne({ _id: req.params.id }, req.body)
+    const result = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    })
 
     return res.status(202).json({
       status: 'success',
@@ -109,11 +112,11 @@ const updateMovie = async (req, res) => {
 
 const deleteMovie = async (req, res) => {
   try {
-    const result = await Movie.deleteOne({ _id: req.params.id })
+    await Movie.deleteOne({ _id: req.params.id })
 
     return res.status(200).json({
       status: 'success',
-      data: result
+      data: null
     })
   } catch (err) {
     return res.status(500).json({
