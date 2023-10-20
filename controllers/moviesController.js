@@ -61,7 +61,24 @@ const getMovie = async (req, res) => {
 
 const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({})
+    const reqQuery = { ...req.query }
+    const reserves = ['limit', 'page', 'sort']
+    reserves.forEach(reserve => {
+      delete reqQuery[reserve]
+    })
+
+    // convert query to correct mongo syntax
+    // eg {year:{lt:2020}} to  {year:{$lt:2020}}
+    const newQuery = JSON.parse(
+      JSON.stringify(reqQuery).replace(
+        /\b(lt|lte|gt|gte)\b/g,
+        match => '$' + match
+      )
+    )
+
+    const query = Movie.find(newQuery)
+
+    const movies = await query
     return res.status(200).json({
       status: 'success',
       count: movies.length,
