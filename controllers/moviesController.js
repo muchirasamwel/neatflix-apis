@@ -62,7 +62,7 @@ const getMovie = async (req, res) => {
 const getMovies = async (req, res) => {
   try {
     const reqQuery = { ...req.query }
-    const reserves = ['limit', 'page', 'sort']
+    const reserves = ['limit', 'page', 'sort', 'fields']
     reserves.forEach(reserve => {
       delete reqQuery[reserve]
     })

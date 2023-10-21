@@ -8,7 +8,11 @@ const movieSchema = new mongoose.Schema({
   cast: [String],
   genres: { type: [String], required: [true, 'genre is required'] },
   extract: String,
-  thumbnail: { type: String, required: true }
+  thumbnail: { type: String, required: true },
+  createdAt: {
+    type: Date,
+    default: new Date()
+  }
 })
 
 const Movie = mongoose.model('Movie', movieSchema)
