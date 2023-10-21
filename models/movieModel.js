@@ -15,6 +15,11 @@ const movieSchema = new mongoose.Schema({
   }
 })
 
+movieSchema.pre('save', function (next) {
+  this.slug = this.title.replace(/[^0-9a-zA-Z]/g, '-')
+  next()
+})
+
 const Movie = mongoose.model('Movie', movieSchema)
 
 module.exports = Movie
