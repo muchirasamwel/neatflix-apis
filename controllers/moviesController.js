@@ -82,6 +82,10 @@ const getMovies = async (req, res) => {
     if (req.query.sort) query.sort(req.query.sort.replace(/,/g, ' '))
     else query.sort('-createdAt')
 
+    // Fields
+    if (req.query.fields) query.select(req.query.fields.replace(/,/g, ' '))
+    else query.select('-__v')
+
     const movies = await query
     return res.status(200).json({
       status: 'success',
