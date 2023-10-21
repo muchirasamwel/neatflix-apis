@@ -93,9 +93,9 @@ const getMovies = async (req, res) => {
 
     query.skip(skip).limit(limit)
 
+    const allCount = await Movie.countDocuments(newQuery)
     if (req.query.page) {
-      const all = await Movie.countDocuments(newQuery)
-      if (skip >= all) {
+      if (skip >= allCount) {
         throw 'Page requested doesnot exist'
       }
     }
@@ -104,6 +104,7 @@ const getMovies = async (req, res) => {
     return res.status(200).json({
       status: 'success',
       page,
+      pages: Math.ceil(allCount / limit),
       limit,
       count: movies.length,
       data: movies
