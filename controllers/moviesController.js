@@ -4,6 +4,7 @@ const {
   updateMovieSchema
 } = require('../validation_schemas/moviesSchemas')
 const Movie = require('../models/movieModel')
+const APIFeatures = require('../utils/APIFeatures')
 
 // let movies = JSON.parse(fs.readFileSync(__dirname + '/../dev-data/movies.json'))
 
@@ -68,55 +69,27 @@ const getMovie = async (req, res) => {
 
 const getMovies = async (req, res) => {
   try {
-    const reqQuery = { ...req.query }
-    const reserves = ['limit', 'page', 'sort', 'fields']
-    reserves.forEach(reserve => {
-      delete reqQuery[reserve]
-    })
-
-    // convert query to correct mongo syntax
-    // eg {year:{lt:2020}} to  {year:{$lt:2020}}
-    const newQuery = JSON.parse(
-      JSON.stringify(reqQuery).replace(
-        /\b(lt|lte|gt|gte)\b/g,
-        match => '$' + match
-      )
+    const moviesQueryBuilder = await new APIFeatures(
+      Movie.find(),
+      req.query,
+      Movie
     )
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate()
 
-    const query = Movie.find(newQuery)
-
-    // Sort
-    if (req.query.sort) query.sort(req.query.sort.replace(/,/g, ' '))
-    else query.sort('-createdAt')
-
-    // Fields
-    if (req.query.fields) query.select(req.query.fields.replace(/,/g, ' '))
-    else query.select('-__v')
-
-    // Pagination
-    const page = req.query.page * 1 || 1
-    const limit = req.query.limit * 1 || 10
-    const skip = (page - 1) * limit
-
-    query.skip(skip).limit(limit)
-
-    const allCount = await Movie.countDocuments(newQuery)
-    if (req.query.page) {
-      if (skip >= allCount) {
-        throw 'Page requested doesnot exist'
-      }
-    }
-
-    const movies = await query
+    const movies = await moviesQueryBuilder.query
     return res.status(200).json({
       status: 'success',
-      page,
-      pages: Math.ceil(allCount / limit),
-      limit,
+      page: req.query.page * 1 || 1,
+      pages: moviesQueryBuilder.pages ?? undefined,
+      limit: req.query.limit * 1,
       count: movies.length,
       data: movies
     })
   } catch (err) {
+    console.log(err)
     return res.status(500).json({
       status: 'fail',
       message: err
