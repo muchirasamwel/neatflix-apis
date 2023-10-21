@@ -45,6 +45,49 @@ const topMoviesAliases = async (req, res, next) => {
   next()
 }
 
+const getMoviesStats = async (req, res) => {
+  try {
+    const stats = await Movie.aggregate([
+      {
+        $match: { rating: { $gte: 2 } }
+      },
+      {
+        $group: {
+          _id: '$year',
+          ratingAverage: { $avg: '$rating' },
+          totalMovies: { $count: {} },
+          ratingAverage: { $avg: '$rating' }
+        }
+      },
+      {
+        $addFields: {
+          year: '$_id'
+        }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      },
+      {
+        $sort: {
+          year: 1
+        }
+      }
+    ])
+
+    res.status(200).json({
+      status: 'success',
+      data: stats
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
+}
+
 const getMovie = async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id)
@@ -156,5 +199,6 @@ module.exports = {
   deleteMovie,
   validateAddMovie,
   validateUpdateMovie,
-  topMoviesAliases
+  topMoviesAliases,
+  getMoviesStats
 }
