@@ -78,7 +78,7 @@ const getMovies = async (req, res) => {
 
     const query = Movie.find(newQuery)
 
-    //Sort
+    // Sort
     if (req.query.sort) query.sort(req.query.sort.replace(/,/g, ' '))
     else query.sort('-createdAt')
 
@@ -86,16 +86,32 @@ const getMovies = async (req, res) => {
     if (req.query.fields) query.select(req.query.fields.replace(/,/g, ' '))
     else query.select('-__v')
 
+    // Pagination
+    const page = req.query.page * 1 || 1
+    const limit = req.query.limit * 1 || 10
+    const skip = (page - 1) * limit
+
+    query.skip(skip).limit(limit)
+
+    if (req.query.page) {
+      const all = await Movie.countDocuments(newQuery)
+      if (skip >= all) {
+        throw 'Page requested doesnot exist'
+      }
+    }
+
     const movies = await query
     return res.status(200).json({
       status: 'success',
+      page,
+      limit,
       count: movies.length,
       data: movies
     })
   } catch (err) {
     return res.status(500).json({
       status: 'fail',
-      message: err.message
+      message: err
     })
   }
 }
