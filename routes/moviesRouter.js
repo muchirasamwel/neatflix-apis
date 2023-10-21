@@ -7,12 +7,13 @@ const {
   updateMovie,
   deleteMovie,
   validateAddMovie,
-  validateUpdateMovie
+  validateUpdateMovie,
+  topMoviesAliases
 } = require('../controllers/moviesController')
 
 const moviesRouter = express.Router()
 
-
+moviesRouter.route('/top-5-movies').get(topMoviesAliases,getMovies)
 moviesRouter.route('/').post(validateAddMovie, addMovie).get(getMovies)
 moviesRouter
   .route('/:id')

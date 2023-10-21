@@ -37,6 +37,13 @@ const validateUpdateMovie = async (req, res, next) => {
   }
 }
 
+const topMoviesAliases = async (req, res, next) => {
+  req.query.sort = '-rating,-year,-createdAt'
+  req.query.limit = 5
+
+  next()
+}
+
 const getMovie = async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id)
@@ -175,5 +182,6 @@ module.exports = {
   getMovies,
   deleteMovie,
   validateAddMovie,
-  validateUpdateMovie
+  validateUpdateMovie,
+  topMoviesAliases
 }
