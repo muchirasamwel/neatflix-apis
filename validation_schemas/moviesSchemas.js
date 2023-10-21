@@ -17,7 +17,6 @@ const addMovieSchema = yup.object({
 })
 
 const updateMovieSchema = yup.object({
-  slug: yup.string().required(),
   title: yup
     .string()
     .optional()
