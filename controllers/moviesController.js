@@ -4,6 +4,7 @@ const {
   updateMovieSchema
 } = require('../validation_schemas/moviesSchemas')
 const Movie = require('../models/movieModel')
+const APIFeatures = require('../utils/APIFeatures')
 
 // let movies = JSON.parse(fs.readFileSync(__dirname + '/../dev-data/movies.json'))
 
@@ -37,6 +38,56 @@ const validateUpdateMovie = async (req, res, next) => {
   }
 }
 
+const topMoviesAliases = async (req, res, next) => {
+  req.query.sort = '-rating,-year,-createdAt'
+  req.query.limit = 5
+
+  next()
+}
+
+const getMoviesStats = async (req, res) => {
+  try {
+    const stats = await Movie.aggregate([
+      {
+        $match: { rating: { $gte: 2 } }
+      },
+      {
+        $group: {
+          _id: '$year',
+          ratingAverage: { $avg: '$rating' },
+          totalMovies: { $count: {} },
+          ratingAverage: { $avg: '$rating' }
+        }
+      },
+      {
+        $addFields: {
+          year: '$_id'
+        }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      },
+      {
+        $sort: {
+          year: 1
+        }
+      }
+    ])
+
+    res.status(200).json({
+      status: 'success',
+      data: stats
+    })
+  } catch (err) {
+    return res.status(500).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
+}
+
 const getMovie = async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id)
@@ -61,16 +112,30 @@ const getMovie = async (req, res) => {
 
 const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({})
+    const moviesQueryBuilder = await new APIFeatures(
+      Movie.find(),
+      req.query,
+      Movie
+    )
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate()
+
+    const movies = await moviesQueryBuilder.query
     return res.status(200).json({
       status: 'success',
+      page: req.query.page * 1 || 1,
+      pages: moviesQueryBuilder.pages ?? undefined,
+      limit: req.query.limit * 1,
       count: movies.length,
       data: movies
     })
   } catch (err) {
+    console.log(err)
     return res.status(500).json({
       status: 'fail',
-      message: err.message
+      message: err
     })
   }
 }
@@ -133,5 +198,7 @@ module.exports = {
   getMovies,
   deleteMovie,
   validateAddMovie,
-  validateUpdateMovie
+  validateUpdateMovie,
+  topMoviesAliases,
+  getMoviesStats
 }
