@@ -5,6 +5,13 @@ mongoose.connect(process.env.DB_CONNECTION).then(con => {
   console.log('Database connected...')
 })
 
-app.listen(process.env.PORT || 3000, () => {
+const server = app.listen(process.env.PORT || 3000, () => {
   console.log('Server ready..')
+})
+
+process.on('unhandledRejection', err => {
+  console.log(err.name, err.message)
+  console.log('shutting down....')
+  server.close()
+  process.exit(1)
 })

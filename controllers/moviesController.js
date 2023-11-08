@@ -5,6 +5,8 @@ const {
 } = require('../validation_schemas/moviesSchemas')
 const Movie = require('../models/movieModel')
 const APIFeatures = require('../utils/APIFeatures')
+const catchAsync = require('../utils/catchAsync')
+const AppError = require('../utils/AppError')
 
 // let movies = JSON.parse(fs.readFileSync(__dirname + '/../dev-data/movies.json'))
 
@@ -45,151 +47,105 @@ const topMoviesAliases = async (req, res, next) => {
   next()
 }
 
-const getMoviesStats = async (req, res) => {
-  try {
-    const stats = await Movie.aggregate([
-      {
-        $match: { rating: { $gte: 2 } }
-      },
-      {
-        $group: {
-          _id: '$year',
-          ratingAverage: { $avg: '$rating' },
-          totalMovies: { $count: {} },
-          ratingAverage: { $avg: '$rating' }
-        }
-      },
-      {
-        $addFields: {
-          year: '$_id'
-        }
-      },
-      {
-        $project: {
-          _id: 0
-        }
-      },
-      {
-        $sort: {
-          year: 1
-        }
+const getMoviesStats = catchAsync(async (req, res, next) => {
+  const stats = await Movie.aggregate([
+    {
+      $match: { rating: { $gte: 2 } }
+    },
+    {
+      $group: {
+        _id: '$year',
+        ratingAverage: { $avg: '$rating' },
+        totalMovies: { $count: {} },
+        ratingAverage: { $avg: '$rating' }
       }
-    ])
-
-    res.status(200).json({
-      status: 'success',
-      data: stats
-    })
-  } catch (err) {
-    return res.status(500).json({
-      status: 'fail',
-      message: err.message
-    })
-  }
-}
-
-const getMovie = async (req, res) => {
-  try {
-    const movie = await Movie.findById(req.params.id)
-    if (movie) {
-      res.status(200).json({
-        status: 'success',
-        data: movie
-      })
-    } else {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Movie not found!'
-      })
+    },
+    {
+      $addFields: {
+        year: '$_id'
+      }
+    },
+    {
+      $project: {
+        _id: 0
+      }
+    },
+    {
+      $sort: {
+        year: 1
+      }
     }
-  } catch (err) {
-    return res.status(500).json({
-      status: 'fail',
-      message: err.message
-    })
-  }
-}
+  ])
 
-const getMovies = async (req, res) => {
-  try {
-    const moviesQueryBuilder = await new APIFeatures(
-      Movie.find(),
-      req.query,
-      Movie
-    )
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate()
+  res.status(200).json({
+    status: 'success',
+    data: stats
+  })
+})
 
-    const movies = await moviesQueryBuilder.query
-    return res.status(200).json({
-      status: 'success',
-      page: req.query.page * 1 || 1,
-      pages: moviesQueryBuilder.pages ?? undefined,
-      limit: req.query.limit * 1,
-      count: movies.length,
-      data: movies
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      status: 'fail',
-      message: err
-    })
-  }
-}
-
-const addMovie = async (req, res) => {
-  try {
-    const movie = await Movie.create(req.body)
-
-    return res.status(201).json({
+const getMovie = catchAsync(async (req, res, next) => {
+  const movie = await Movie.findById(req.params.id)
+  if (movie) {
+    res.status(200).json({
       status: 'success',
       data: movie
     })
-  } catch (err) {
-    return res.status(500).json({
-      status: 'fail',
-      message: err.message
-    })
+  } else {
+    next(new AppError(404, 'Movie not found'))
   }
-}
+})
 
-const updateMovie = async (req, res) => {
-  try {
-    const result = await Movie.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    })
+const getMovies = catchAsync(async (req, res, next) => {
+  const moviesQueryBuilder = await new APIFeatures(
+    Movie.find(),
+    req.query,
+    Movie
+  )
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate()
 
-    return res.status(202).json({
-      status: 'success',
-      data: result
-    })
-  } catch (err) {
-    return res.status(500).json({
-      status: 'fail',
-      message: err.message
-    })
-  }
-}
+  const movies = await moviesQueryBuilder.query
+  return res.status(200).json({
+    status: 'success',
+    page: req.query.page * 1 || 1,
+    pages: moviesQueryBuilder.pages ?? undefined,
+    limit: req.query.limit * 1,
+    count: movies.length,
+    data: movies
+  })
+})
 
-const deleteMovie = async (req, res) => {
-  try {
-    await Movie.deleteOne({ _id: req.params.id })
+const addMovie = catchAsync(async (req, res, next) => {
+  const movie = await Movie.create(req.body)
 
-    return res.status(200).json({
-      status: 'success',
-      data: null
-    })
-  } catch (err) {
-    return res.status(500).json({
-      status: 'fail',
-      message: err.message
-    })
-  }
-}
+  return res.status(201).json({
+    status: 'success',
+    data: movie
+  })
+})
+
+const updateMovie = catchAsync(async (req, res, next) => {
+  const result = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  }).catch(next)
+
+  return res.status(202).json({
+    status: 'success',
+    data: result
+  })
+})
+
+const deleteMovie = catchAsync(async (req, res, next) => {
+  await Movie.deleteOne({ _id: req.params.id })
+
+  return res.status(200).json({
+    status: 'success',
+    data: null
+  })
+})
 
 module.exports = {
   addMovie,
