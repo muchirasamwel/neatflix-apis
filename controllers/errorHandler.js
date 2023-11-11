@@ -1,5 +1,15 @@
 const AppError = require('../utils/AppError')
 
+const handleJWTTokenError = type => {
+  let msg
+  if (type == 'JsonWebTokenError')
+    msg = 'Invalid token. Please provide a valid token'
+  else if (type == 'TokenExpiredError')
+    msg = 'Expired token. Please provide a valid token.'
+
+  return new AppError(401, msg)
+}
+
 const handleCastErrorDB = err => {
   return new AppError(400, `Invalid ${err.path} with value ${err.value}`)
 }
@@ -38,6 +48,8 @@ const errorHandler = (err, req, res, next) => {
 
   if (error.code == 11000) error = handleDuplicateDB(error)
   if (error.name == 'CastError') error = handleCastErrorDB(error)
+  if (error.name == 'JsonWebTokenError' || error.name == 'TokenExpiredError')
+    error = handleJWTTokenError(error.name)
 
   error.statusCode = error.statusCode ?? 500
   error.status = error.status ?? 'error'

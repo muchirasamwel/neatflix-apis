@@ -11,16 +11,20 @@ const {
   topMoviesAliases,
   getMoviesStats
 } = require('../controllers/moviesController')
+const { authGuard } = require('../controllers/authController')
 
 const moviesRouter = express.Router()
 
 moviesRouter.route('/top-5-movies').get(topMoviesAliases, getMovies)
-moviesRouter.route('/movies-stats').get(getMoviesStats)
-moviesRouter.route('/').post(validateAddMovie, addMovie).get(getMovies)
+moviesRouter.route('/movies-stats').get(authGuard, getMoviesStats)
+moviesRouter
+  .route('/')
+  .post(authGuard, validateAddMovie, addMovie)
+  .get(getMovies)
 moviesRouter
   .route('/:id')
   .get(getMovie)
-  .patch(validateUpdateMovie, updateMovie)
-  .delete(deleteMovie)
+  .patch(authGuard, validateUpdateMovie, updateMovie)
+  .delete(authGuard, deleteMovie)
 
 module.exports = moviesRouter

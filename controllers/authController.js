@@ -2,6 +2,27 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/AppError')
+const { promisify } = require('util')
+
+const authGuard = catchAsync(async (req, res, next) => {
+  const authorization = req.headers.authorization
+  if (!authorization?.includes('Bearer ')) {
+    return next(new AppError(401, 'Unauthorized. Authorization token required'))
+  }
+
+  const token = authorization.split(' ')?.[1]
+
+  const jwtData = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
+
+  const user = User.findById(jwtData.id)
+  if (!user) {
+    return next(
+      new AppError(401, 'User that created the token no longer exists')
+    )
+  }
+
+  next()
+})
 
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
@@ -59,4 +80,4 @@ const signup = catchAsync(async (req, res, next) => {
   })
 })
 
-module.exports = { login, signup }
+module.exports = { login, signup, authGuard }
