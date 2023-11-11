@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     ]
   },
   name: { type: String, required: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false },
   confirmPassword: {
     type: String,
     required: true,
@@ -43,6 +43,10 @@ userSchema.pre('save', async function (next) {
   this.confirmPassword = undefined
 
   next()
+})
+
+userSchema.method('verifyPass', async function (password) {
+  return await bcrypt.compare(password, this.password)
 })
 
 const User = mongoose.model('user', userSchema)
